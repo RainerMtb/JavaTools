@@ -54,7 +54,7 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 		this.xAxis = xAxis;
 		this.yAxis = yAxis;
 		setAnimated(false);
-		setAlternativeRowFillVisible(true);
+		setAlternativeRowFillVisible(false);
 		setAlternativeColumnFillVisible(false);
 		setAxisSortingPolicy(SortingPolicy.NONE);
 		setHorizontalZeroLineVisible(false);
@@ -62,7 +62,7 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 		
 		legendSideProperty().addListener(_ -> updateLegend());
 		
-		//put a rectangle on top of the chart because gridlines and series will catch mouse input
+		//put a rectangle on top of the data area because gridlines and series will catch mouse input otherwise
 		Region region = (Region) lookup(".chart-plot-background");
 		Rectangle plotArea = new Rectangle();
 		plotArea.setFill(Color.TRANSPARENT);
@@ -100,6 +100,9 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 				pan(yAxis, mouseEvent.getY(), ym, yLo, yHi);
 			}
 		});
+		setOnMouseReleased(_ -> {
+			isPanning = false;
+		});
 		
 		plotArea.setOnScroll(scrollEvent -> {
 			double f = scrollEvent.getDeltaY() < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR;
@@ -123,10 +126,6 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 			}
 		});
 		
-		setOnMouseReleased(_ -> {
-			isPanning = false;
-		});
-		
 		//react to window resizing, zoom axes to counteract resized viewport and have data stay in the center
 		xAxis.widthProperty().addListener((_, oldVal, newVal) -> {
 			if (xAxis.isAutoRanging() == false)	{
@@ -140,7 +139,7 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 		});
 		
 		//context menu build up
-		MenuItem menuEqual = new MenuItem("Axes Equal");
+		MenuItem menuEqual = new MenuItem("Set Axes Equal");
 		menuEqual.setOnAction(_ -> setAxesEqual());
 		
 		ToggleGroup legendGroup = new ToggleGroup();
@@ -201,7 +200,7 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 	
 	//---------- private methods ------------------------
 	
-	private void zoom(ValueAxis <Number> axis, double mousePos, double f) {
+	private void zoom(CustomNumberAxis axis, double mousePos, double f) {
 		axis.setAutoRanging(false);
 		double mid = axis.getValueForDisplay(mousePos).doubleValue();
 		double lo = axis.getLowerBound(), hi = axis.getUpperBound();
@@ -209,7 +208,7 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 		axis.setUpperBound(mid + (hi - mid) * f);
 	}
 	
-	private void pan(ValueAxis <Number> axis, double mousePos, double xm, double lo, double hi) {
+	private void pan(CustomNumberAxis axis, double mousePos, double xm, double lo, double hi) {
 		axis.setAutoRanging(false);
 		double delta = (xm - mousePos) / axis.getScale();
 		axis.setLowerBound(lo + delta);
@@ -555,8 +554,7 @@ class CustomNumberAxis extends ValueAxis <Number> {
 		while (tickDelta.totalValue() > deltaStart) tickDelta = tickDelta.decrease();
 		while (tickDelta.totalValue() <= deltaStart) tickDelta = tickDelta.increase();
 		
-		boolean doLoop = true;
-		while (doLoop) {
+		while (true) {
 			tickMagnitude = tickDelta.magnitude();
 			majorTickDelta = tickDelta.totalValue();
 			majorTickValues.clear();
@@ -579,7 +577,7 @@ class CustomNumberAxis extends ValueAxis <Number> {
 				
 			} else {
 				tickLabelSize = labelSize;
-				doLoop = false;
+				break;
 			}
 		}
 		
