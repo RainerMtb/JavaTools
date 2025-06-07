@@ -1,6 +1,7 @@
 module DataPlotter {
-	requires javafx.controls;
-	requires javafx.graphics;
+	requires transitive javafx.controls;
 	requires java.desktop;
-	requires javafx.swing;
+	requires javafx.graphics;
+	
+	exports application;
 }
