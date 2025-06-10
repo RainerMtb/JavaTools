@@ -95,7 +95,7 @@ public class Demo extends Application {
 			
 			chart.seriesBuilder()
 				.setY(new double[] {4, 2, 7, 5.0, 3, 4})
-				.setColor(Color.BLACK)
+				.setColor(Color.BROWN)
 				.setLineWidth(1)
 				.setSymbol(DataSymbol.PLUS)
 				.plot();

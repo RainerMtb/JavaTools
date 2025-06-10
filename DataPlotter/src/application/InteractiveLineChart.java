@@ -86,18 +86,18 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 		}));
 		plotArea.setOnMouseDragged(mouseEvent -> {
 			if (isPanning) {
-				pan(xAxis, mouseEvent.getX(), xm, xLo, xHi);
-				pan(yAxis, mouseEvent.getY(), ym, yLo, yHi);
+				xAxis.pan(mouseEvent.getX(), xm, xLo, xHi);
+				yAxis.pan(mouseEvent.getY(), ym, yLo, yHi);
 			}
 		});
 		xAxis.setOnMouseDragged(mouseEvent -> {
 			if (isPanning) {
-				pan(xAxis, mouseEvent.getX(), xm, xLo, xHi);
+				xAxis.pan(mouseEvent.getX(), xm, xLo, xHi);
 			}
 		});
 		yAxis.setOnMouseDragged(mouseEvent -> {
 			if (isPanning) {
-				pan(yAxis, mouseEvent.getY(), ym, yLo, yHi);
+				yAxis.pan(mouseEvent.getY(), ym, yLo, yHi);
 			}
 		});
 		setOnMouseReleased(_ -> {
@@ -106,35 +106,31 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 		
 		plotArea.setOnScroll(scrollEvent -> {
 			double f = scrollEvent.getDeltaY() < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR;
-			xAxis.setAutoRanging(false);
-			yAxis.setAutoRanging(false);
-			zoom(xAxis, scrollEvent.getX(), f);
-			zoom(yAxis, scrollEvent.getY(), f);
+			xAxis.zoom(scrollEvent.getX(), f);
+			yAxis.zoom(scrollEvent.getY(), f);
 		});
 		xAxis.setOnScroll(scrollEvent -> {
 			if (scrollEvent.getX() > 0 && scrollEvent.getX() < xAxis.getWidth()) {
 				double f = scrollEvent.getDeltaY() < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR;
-				xAxis.setAutoRanging(false);
-				zoom(xAxis, scrollEvent.getX(), f);
+				xAxis.zoom(scrollEvent.getX(), f);
 			}
 		});
 		yAxis.setOnScroll(scrollEvent -> {
 			if (scrollEvent.getY() > 0 && scrollEvent.getY() < yAxis.getHeight()) {
 				double f = scrollEvent.getDeltaY() < 0 ? ZOOM_FACTOR : 1 / ZOOM_FACTOR;
-				yAxis.setAutoRanging(false);
-				zoom(yAxis, scrollEvent.getY(), f);
+				yAxis.zoom(scrollEvent.getY(), f);
 			}
 		});
 		
 		//react to window resizing, zoom axes to counteract resized viewport and have data stay in the center
 		xAxis.widthProperty().addListener((_, oldVal, newVal) -> {
 			if (xAxis.isAutoRanging() == false)	{
-				zoom(xAxis, newVal.doubleValue() / 2.0, newVal.doubleValue() / oldVal.doubleValue());
+				xAxis.zoom(newVal.doubleValue() / 2.0, newVal.doubleValue() / oldVal.doubleValue());
 			}
 		});
 		yAxis.heightProperty().addListener((_, oldVal, newVal) -> {
 			if (yAxis.isAutoRanging() == false)	{
-				zoom(yAxis, newVal.doubleValue() / 2.0, newVal.doubleValue() / oldVal.doubleValue());
+				yAxis.zoom(newVal.doubleValue() / 2.0, newVal.doubleValue() / oldVal.doubleValue());
 			}
 		});
 		
@@ -184,8 +180,8 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 		xAxis.setAutoRanging(false);
 		yAxis.setAutoRanging(false);
 		double ratio = Math.abs(xAxis.getScale()) / Math.abs(yAxis.getScale());
-		if (ratio < 1) zoom(yAxis, yAxis.getHeight() / 2.0, 1 / ratio);
-		if (ratio > 1) zoom(xAxis, xAxis.getWidth() / 2.0, ratio);
+		if (ratio < 1) yAxis.zoom(yAxis.getHeight() / 2.0, 1 / ratio);
+		if (ratio > 1) xAxis.zoom(xAxis.getWidth() / 2.0, ratio);
 	}
 	
 	public void setLegendEntry(Node seriesNode, Boolean hasLegendEntry) {
@@ -197,23 +193,7 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 		getData().clear();
 		menuAxesAuto.setSelected(true);
 	}
-	
-	//---------- private methods ------------------------
-	
-	private void zoom(CustomNumberAxis axis, double mousePos, double f) {
-		axis.setAutoRanging(false);
-		double mid = axis.getValueForDisplay(mousePos).doubleValue();
-		double lo = axis.getLowerBound(), hi = axis.getUpperBound();
-		axis.setLowerBound(mid - (mid - lo) * f);
-		axis.setUpperBound(mid + (hi - mid) * f);
-	}
-	
-	private void pan(CustomNumberAxis axis, double mousePos, double xm, double lo, double hi) {
-		axis.setAutoRanging(false);
-		double delta = (xm - mousePos) / axis.getScale();
-		axis.setLowerBound(lo + delta);
-		axis.setUpperBound(hi + delta);
-	}
+
 	
 	@Override
 	protected void updateLegend() {
@@ -236,6 +216,7 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 		}
 		setLegend(legend.getChildren().size() > 0 ? legend : null);
 	}
+
 	
 	//Builder class to add data series to the chart conveniently
 	public class SeriesBuilder {
@@ -265,7 +246,7 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 		 * @param collection of Double values, must not be null, must not contain null values
 		 * @return Builder object
 		 */
-		public SeriesBuilder setX(Collection <Double> x) {
+		public SeriesBuilder setX(Collection <? extends Number> x) {
 			return setValues(x, 0);
 		}
 
@@ -274,7 +255,7 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 		 * @param collection of Double values, must not be null, must not contain null values
 		 * @return Builder object
 		 */
-		public SeriesBuilder setY(Collection <Double> y) {
+		public SeriesBuilder setY(Collection <? extends Number> y) {
 			return setValues(y, 1);
 		}
 
@@ -323,7 +304,7 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 		private double[] dataX, dataY;
 		private XYChart.Series<Number, Number> series = new Series<>();
 		private String name;
-		private Color color;
+		private Color color = Color.BLACK;
 		private Double lineWidth;
 		private DataSymbol symbol;
 		private boolean isFilled = false;
@@ -334,8 +315,12 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 		 * @return generated Series
 		 */
 		public Series <Number, Number> plot() {
-			if (countX() != countY()) throw new RuntimeException("unequal number of data elements, x=" + countX() + ", y=" + countY());
-			if (isFilled && color == null) throw new RuntimeException("setting fill requires setting color");
+			if (countX() == 0) {
+				dataX = IntStream.range(0, countY()).mapToDouble(i -> i).toArray();
+			}
+			if (countX() != countY()) {
+				throw new RuntimeException("number of data elements must be equal, x=" + countX() + ", y=" + countY());
+			}
 			
 			StringBuilder cssSymbol = new StringBuilder(""), cssLine = new StringBuilder("");
 			if (symbol != null) {
@@ -418,8 +403,8 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 			return setValues(elements.stream().mapToDouble(mapper).toArray(), axisIdx);
 		}
 		
-		private SeriesBuilder setValues(Collection <Double> val, int axisIdx) {
-			return setValues(val.stream().mapToDouble(d -> d).toArray(), axisIdx);
+		private SeriesBuilder setValues(Collection <? extends Number> val, int axisIdx) {
+			return setValues(val.stream().mapToDouble(d -> d.doubleValue()).toArray(), axisIdx);
 		}
 		
 		private SeriesBuilder setValues(double[] values, int axisIdx) {
@@ -428,9 +413,6 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 				
 			} else if (axisIdx == 1) {
 				dataY = values;
-				if (dataX == null) {
-					dataX = IntStream.range(0, countY()).mapToDouble(i -> i).toArray();
-				}
 				
 			} else {
 				throw new RuntimeException("internal error");
@@ -447,7 +429,7 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 		}
 		
 		private int countArray(double[] array) {
-			return array == null ? -1 : array.length;
+			return array == null ? 0 : array.length;
 		}
 		
 		private String hexColor(Color color) {
@@ -496,6 +478,8 @@ class CustomNumberAxis extends ValueAxis <Number> {
 	private double majorTickDelta = 50.0;
 	private List <Number> majorTickValues = new ArrayList<>();
 	private double tickLabelSize = 25.0;
+	private double tickLabelWidth = 0.0;
+	private double[] tickRange = new double[3];
 	
 	//default formatter for tick labels for this axis
 	private final StringConverter<Number> tickLabelFormatter = new StringConverter<>() {
@@ -521,6 +505,34 @@ class CustomNumberAxis extends ValueAxis <Number> {
 		setTickLabelFormatter(tickLabelFormatter);
 	}
 	
+	
+	void zoom(double center, double f) {
+		setAutoRanging(false);
+		double mid = getValueForDisplay(center).doubleValue();
+		double lo = getLowerBound();
+		double hi = getUpperBound();
+		setLowerBound(mid - (mid - lo) * f);
+		setUpperBound(mid + (hi - mid) * f);
+		double s = calculateNewScale(axisLength(), getLowerBound(), getUpperBound());
+		setScale(s);
+	}
+	
+	void pan(double mousePos, double m, double lo, double hi) {
+		setAutoRanging(false);
+		double delta = (m - mousePos) / getScale();
+		setLowerBound(lo + delta);
+		setUpperBound(hi + delta);
+	}
+	
+	private double axisLength() {
+		return isYAxis() ? getHeight() : getWidth();
+	}
+	
+	private boolean isYAxis() {
+		return getSide().isVertical();
+	}
+	
+	
 	@Override
 	protected Object autoRange(double minValue, double maxValue, double length, double labelSize) {
 		double margin = (maxValue - minValue) * MARGIN;
@@ -540,48 +552,56 @@ class CustomNumberAxis extends ValueAxis <Number> {
 
 	@Override
 	protected Object getRange() {
-		double[] range = new double[] {getLowerBound(), getUpperBound(), getScale()};
+		double[] range = new double[] { getLowerBound(), getUpperBound(), getScale() };
 		return range;
 	}
 	
 	@Override
 	protected List <Number> calculateTickValues(double length, Object rangeObj) {
-		//System.out.println("calculateTickValues");
 		double[] range = (double[]) rangeObj;
-		double lo = range[0], hi = range[1], scale = Math.abs(range[2]);
-		double deltaStart = tickLabelSize / scale;
-		TickDelta tickDelta = new TickDelta(0);
-		while (tickDelta.totalValue() > deltaStart) tickDelta = tickDelta.decrease();
-		while (tickDelta.totalValue() <= deltaStart) tickDelta = tickDelta.increase();
-		
-		while (true) {
-			tickMagnitude = tickDelta.magnitude();
-			majorTickDelta = tickDelta.totalValue();
-			majorTickValues.clear();
-			double delta = majorTickDelta;
-
-			double labelSize = 5.0;
-			double majorTick = Math.floor(lo / delta) * delta; 				// first major tick mark likely outside visible range
-			while (majorTick < hi && majorTickValues.size() < 1000) {		// put together list of ticks, safeguard list size
-				majorTickValues.add(majorTick);
-				majorTick += delta;
-				String str = tickLabelFormatter.toString(majorTick);		// find max label size to fit
-				Dimension2D dim = measureTickMarkLabelSize(str, getTickLabelRotation());
-				double d = getSide().isHorizontal() ? dim.getWidth() : dim.getHeight();
-				if (d > labelSize) labelSize = d;
-			}
+		if (Arrays.equals(range, tickRange) == false) {							// recalculate ticks only when range has changed
+			//System.out.println("calculateTickValues " + (isYAxis() ? "Y " : "X ") + Arrays.toString(range));
+			tickRange = range;
+			double lo = range[0], hi = range[1], scale = Math.abs(range[2]);
+			double deltaStart = tickLabelSize / scale;
+			TickDelta tickDelta = new TickDelta(0);								// find tick interval based on previous labels
+			while (tickDelta.totalValue() > deltaStart) tickDelta = tickDelta.decrease();
+			while (tickDelta.totalValue() <= deltaStart) tickDelta = tickDelta.increase();
 			
-			double deltaPixel = delta * scale;
-			if (deltaPixel < labelSize + TICK_GAP) {
-				tickDelta = tickDelta.increase();
+			while (true) {
+				tickMagnitude = tickDelta.magnitude();
+				majorTickDelta = tickDelta.totalValue();
+				majorTickValues.clear();
+				double delta = majorTickDelta;
+	
+				double labelSize = 5.0;
+				double labelWidth = 0.0;
+				double majorTick = Math.floor(lo / delta) * delta; 				// first major tick mark likely outside visible range
+				while (majorTick < hi && majorTickValues.size() < 1000) {		// put together list of ticks, safeguard list size
+					majorTickValues.add(majorTick);
+					majorTick += delta;
+					String str = tickLabelFormatter.toString(majorTick);		// find max label size to fit
+					Dimension2D dim = measureTickMarkLabelSize(str, getTickLabelRotation());
+					double d;
+					d = isYAxis() ? dim.getHeight() : dim.getWidth();
+					if (d > labelSize) labelSize = d;
+					d = dim.getWidth();
+					if (d > labelWidth) labelWidth = d;
+				}
 				
-			} else {
-				tickLabelSize = labelSize;
-				break;
+				double deltaPixel = delta * scale;
+				if (deltaPixel < labelSize + TICK_GAP) {
+					tickDelta = tickDelta.increase();
+					
+				} else {
+					tickLabelSize = labelSize;
+					tickLabelWidth = labelWidth;
+					break;
+				}
 			}
+			//System.out.println(majorTickValues);
 		}
 		
-		//System.out.println(majorTickValues);
 		return majorTickValues;
 	}
 	
@@ -597,6 +617,17 @@ class CustomNumberAxis extends ValueAxis <Number> {
 	@Override
 	protected String getTickMarkLabel(Number value) {
 		return tickLabelFormatter.toString(value);
+	}
+	
+	@Override
+	protected double computePrefWidth(double height) {
+		double width = 100.0;
+		if (isYAxis()) {
+			calculateTickValues(height, autoRange(height));
+			double tickMarkLength = isTickMarkVisible() && getTickLength() > 0 ? getTickLength() : 0;
+			width = tickLabelWidth + getTickLabelGap() + tickMarkLength;
+		}
+		return width;
 	}
 	
 	
