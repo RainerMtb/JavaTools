@@ -1,6 +1,6 @@
 module RawViewer {
 	requires java.prefs;
-	requires javafx.controls;
+	requires transitive javafx.controls;
 	
 	exports application;
 }

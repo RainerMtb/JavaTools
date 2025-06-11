@@ -103,26 +103,23 @@ public class RawViewer extends Application {
 		//controls on top
 		Button btnOpen = makeIconButton(svgOpen);
 		Button btnReload = makeIconButton(svgReload);
-		Label lblWidth = new Label("Width:");
+		Label lblWidth = new Label("  Width:");
 		comboWidth = new ComboBox<>(FXCollections.observableList(pixelList));
 		comboWidth.setEditable(true);
 		comboWidth.setPrefWidth(85);
-		Label lblHeight = new Label("Height:");
+		Label lblHeight = new Label("  Height:");
 		comboHeight = new ComboBox<>(FXCollections.observableList(pixelList));
 		comboHeight.setEditable(true);
 		comboHeight.setPrefWidth(85);
-		Label lblFormat = new Label("Format:");
+		Label lblFormat = new Label("  Format:");
 		comboFormat = new ComboBox<>(FXCollections.observableArrayList(formatMap.keySet()).sorted());
 		HBox hboxTop = new HBox(6, 
 				btnOpen, 
 				btnReload, 
-				new Separator(Orientation.VERTICAL), 
 				lblWidth, 
 				comboWidth, 
-				new Separator(Orientation.VERTICAL), 
 				lblHeight, 
 				comboHeight, 
-				new Separator(Orientation.VERTICAL), 
 				lblFormat, 
 				comboFormat
 				);
