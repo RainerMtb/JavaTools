@@ -229,6 +229,8 @@ public class RawViewer extends Application {
 		comboHeight.setConverter(widthHeightInputConverter);
 		
 		//read preferences
+		double minWidth = 650.0;
+		double minHeight = 450.0;
 		inputDirectory = prefs.get("folder", System.getProperty("user.home", "."));
 		comboWidth.setValue(prefs.getInt("width", 1920));
 		comboHeight.setValue(prefs.getInt("height", 1080));
@@ -236,8 +238,8 @@ public class RawViewer extends Application {
 		comboFps.setValue(prefs.getDouble("fps", 25.0));
 		stage.setX(prefs.getDouble("posx", 50));
 		stage.setY(prefs.getDouble("posy", 50));
-		stage.setWidth(prefs.getDouble("width", 650));
-		stage.setHeight(prefs.getDouble("height", 450));
+		stage.setWidth(prefs.getDouble("width", minWidth));
+		stage.setHeight(prefs.getDouble("height", minHeight));
 		
 		//writing preferences back to storage on close
 		stage.setOnCloseRequest(_ -> {
@@ -254,10 +256,10 @@ public class RawViewer extends Application {
 		});
 
 		//build and show the scene
-		Scene scene = new Scene(mainPane, 650, 450);
+		Scene scene = new Scene(mainPane, minWidth, minHeight);
 		stage.setScene(scene);
-		stage.setMinWidth(650);
-		stage.setMinHeight(450);
+		stage.setMinWidth(minWidth);
+		stage.setMinHeight(minHeight);
 		stage.setTitle("RawViewer");
 		stage.show();
 
