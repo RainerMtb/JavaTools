@@ -18,6 +18,7 @@ import javafx.geometry.Pos;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
+import javafx.util.converter.DoubleStringConverter;
 import javafx.util.converter.IntegerStringConverter;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -75,6 +76,7 @@ public class RawViewer extends Application {
 	private ComboBox<Integer> comboWidth;
 	private ComboBox<Integer> comboHeight;
 	private ComboBox<String> comboFormat;
+	private ComboBox<Double> comboFps;
 	private ImageView imageView;
 	private SimpleIntegerProperty propFrameMax = new SimpleIntegerProperty(1);
 
@@ -103,16 +105,26 @@ public class RawViewer extends Application {
 		//controls on top
 		Button btnOpen = makeIconButton(svgOpen);
 		Button btnReload = makeIconButton(svgReload);
+		
 		Label lblWidth = new Label("  Width:");
 		comboWidth = new ComboBox<>(FXCollections.observableList(pixelList));
 		comboWidth.setEditable(true);
 		comboWidth.setPrefWidth(85);
+		
 		Label lblHeight = new Label("  Height:");
 		comboHeight = new ComboBox<>(FXCollections.observableList(pixelList));
 		comboHeight.setEditable(true);
 		comboHeight.setPrefWidth(85);
+		
 		Label lblFormat = new Label("  Format:");
 		comboFormat = new ComboBox<>(FXCollections.observableArrayList(formatMap.keySet()).sorted());
+		
+		Label lblFps = new Label("  FPS:");
+		comboFps = new ComboBox<>(FXCollections.observableArrayList(10.0, 15.0, 25.0, 30.0, 48.0, 60.0));
+		comboFps.setEditable(true);
+		comboFps.setPrefWidth(70);
+		comboFps.setConverter(new DoubleStringConverter()); //converter must always be provided extra
+
 		HBox hboxTop = new HBox(6, 
 				btnOpen, 
 				btnReload, 
@@ -121,7 +133,9 @@ public class RawViewer extends Application {
 				lblHeight, 
 				comboHeight, 
 				lblFormat, 
-				comboFormat
+				comboFormat,
+				lblFps,
+				comboFps
 				);
 		hboxTop.setAlignment(Pos.CENTER_LEFT);
 		hboxTop.setPadding(new Insets(4));
@@ -219,6 +233,11 @@ public class RawViewer extends Application {
 		comboWidth.setValue(prefs.getInt("width", 1920));
 		comboHeight.setValue(prefs.getInt("height", 1080));
 		comboFormat.setValue(prefs.get("format", "Y"));
+		comboFps.setValue(prefs.getDouble("fps", 25.0));
+		stage.setX(prefs.getDouble("posx", 50));
+		stage.setY(prefs.getDouble("posy", 50));
+		stage.setWidth(prefs.getDouble("width", 650));
+		stage.setHeight(prefs.getDouble("height", 450));
 		
 		//writing preferences back to storage on close
 		stage.setOnCloseRequest(_ -> {
@@ -226,13 +245,18 @@ public class RawViewer extends Application {
 			prefs.putInt("width", comboWidth.getValue());
 			prefs.putInt("height", comboHeight.getValue());
 			prefs.put("format", comboFormat.getValue());
+			prefs.putDouble("fps", comboFps.getValue());
+			prefs.putDouble("posx", stage.getX());
+			prefs.putDouble("posy", stage.getY());
+			prefs.putDouble("width", stage.getWidth());
+			prefs.putDouble("height", stage.getHeight());
 			try { prefs.flush(); } catch (BackingStoreException e) {}
 		});
 
 		//build and show the scene
-		Scene scene = new Scene(mainPane, 600, 450);
+		Scene scene = new Scene(mainPane, 650, 450);
 		stage.setScene(scene);
-		stage.setMinWidth(600);
+		stage.setMinWidth(650);
 		stage.setMinHeight(450);
 		stage.setTitle("RawViewer");
 		stage.show();
@@ -265,6 +289,7 @@ public class RawViewer extends Application {
 		comboWidth.setOnAction(_ -> startLoader());
 		comboHeight.setOnAction(_ -> startLoader());
 		comboFormat.setOnAction(_ -> startLoader());
+		comboFps.setOnAction(_ -> startLoader());
 		spinnerFrameIdx.valueProperty().addListener(_ -> startLoader());
 		
 		//scrolling on the image
@@ -310,7 +335,7 @@ public class RawViewer extends Application {
 		private RandomAccessFile input;
 		private ImageView imageView;
 		private Integer w, h;
-		private long idx, idxMax;
+		private long idx, idxMax, nanosPerFrame;
 		private final byte[] buffer;
 		private final byte[] dest;
 		
@@ -323,6 +348,8 @@ public class RawViewer extends Application {
 			this.w = comboWidth.getValue();
 			this.h = comboHeight.getValue();
 			this.idx = spinnerFrameIdx.getValue().longValue();
+			double fps = comboFps.getValue();
+			this.nanosPerFrame = (long) (1e9 / fps);
 			this.isPlaying = play;
 			buffer = new byte[w * h * 4];
 			dest = new byte[w * h * 4];
@@ -362,7 +389,7 @@ public class RawViewer extends Application {
 				}
 				
 				while (isPlaying && idx < idxMax && isCancelled() == false) {
-					long nextTime = System.nanoTime() + 40 * 1_000_000; //next frame in 40ms which is 25 frames per second
+					long nextTime = System.nanoTime() + nanosPerFrame; //wait for next frame to show
 					idx++;
 					input.seek(siz * idx);
 					input.read(buffer, 0, siz);
