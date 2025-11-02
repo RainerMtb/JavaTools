@@ -24,6 +24,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.*;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.SVGPath;
@@ -279,6 +281,31 @@ public class RawViewer extends Application {
 					inputDirectory = inputFile.getParentFile().getAbsolutePath();
 					stage.setTitle("RawViewer - " + selectedFile);
 					startLoader();
+				
+				} catch (IOException e) {
+					new Alert(AlertType.ERROR, "Cannot open file: " + e.getMessage(), ButtonType.OK).showAndWait();
+				}
+			}
+		});
+		
+		//drop file
+		pane.setOnDragOver(dragEvent -> {
+			dragEvent.acceptTransferModes(TransferMode.LINK);
+		});
+		
+		pane.setOnDragDropped(dragEvent -> {
+			Dragboard db = dragEvent.getDragboard();
+			List<File> files = db.getFiles();
+			if (files.isEmpty() == false) {
+				inputFile = files.get(0);
+				try {
+					input = new RandomAccessFile(inputFile, "r");
+					inputDirectory = inputFile.getParentFile().getAbsolutePath();
+					stage.setTitle("RawViewer - " + inputFile);
+					startLoader();
+					
+					dragEvent.setDropCompleted(true);
+					dragEvent.consume();
 				
 				} catch (IOException e) {
 					new Alert(AlertType.ERROR, "Cannot open file: " + e.getMessage(), ButtonType.OK).showAndWait();

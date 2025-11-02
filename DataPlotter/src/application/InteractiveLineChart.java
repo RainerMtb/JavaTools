@@ -37,7 +37,8 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 	private final CheckMenuItem menuGrid = new CheckMenuItem("Show Grid");
 	private final CheckMenuItem menuLegend = new CheckMenuItem("Show Legend");
 	private final CheckMenuItem menuSymbols = new CheckMenuItem("Show Symbols");
-	private final CheckMenuItem menuAxesAuto = new CheckMenuItem("Axes Autorange");
+	private final CheckMenuItem menuXAuto = new CheckMenuItem("X Axis Autorange");
+	private final CheckMenuItem menuYAuto = new CheckMenuItem("Y Axis Autorange");
 	
 	//the one and only public constructor
 	public InteractiveLineChart() {
@@ -162,14 +163,14 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 		});
 		legendBottom.setSelected(true);
 		
-		ContextMenu cm = new ContextMenu(menuSide, menuEqual, new SeparatorMenuItem(), menuGrid, menuLegend, menuSymbols, menuAxesAuto);
+		ContextMenu cm = new ContextMenu(menuSide, menuEqual, new SeparatorMenuItem(), menuGrid, menuLegend, menuSymbols, menuXAuto, menuYAuto);
 		
 		//context menu actions
 		menuGrid.selectedProperty().bindBidirectional(horizontalGridLinesVisibleProperty());
 		menuGrid.selectedProperty().bindBidirectional(verticalGridLinesVisibleProperty());
 		menuLegend.selectedProperty().bindBidirectional(legendVisibleProperty());
-		menuAxesAuto.selectedProperty().bindBidirectional(xAxis.autoRangingProperty());
-		menuAxesAuto.selectedProperty().bindBidirectional(yAxis.autoRangingProperty());
+		menuXAuto.selectedProperty().bindBidirectional(xAxis.autoRangingProperty());
+		menuYAuto.selectedProperty().bindBidirectional(yAxis.autoRangingProperty());
 		
 		//context menu activate
 		plotArea.setOnContextMenuRequested(ev -> cm.show(plotArea, ev.getScreenX(), ev.getScreenY()));
@@ -184,6 +185,12 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 		if (ratio > 1) xAxis.zoom(xAxis.getWidth() / 2.0, ratio);
 	}
 	
+	public void setYLimits(double lo, double hi) {
+		yAxis.setAutoRanging(false);
+		yAxis.setLowerBound(lo);
+		yAxis.setUpperBound(hi);
+	}
+	
 	public void setLegendEntry(Node seriesNode, Boolean hasLegendEntry) {
 		legendEntryMap.put(seriesNode, hasLegendEntry);
 	}
@@ -191,9 +198,14 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 	//clear chart and set default properties
 	public void reset() {
 		getData().clear();
-		menuAxesAuto.setSelected(true);
+		menuXAuto.setSelected(true);
+		menuYAuto.setSelected(true);
 	}
-
+	
+	//clear chart
+	public void clear() {
+		getData().clear();
+	}
 	
 	@Override
 	protected void updateLegend() {
@@ -343,8 +355,10 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 			ObservableList <Data <Number, Number>> dataList = FXCollections.observableArrayList();
 			for (int i = 0; i < countX(); i++) dataList.add(new Data <Number, Number> (dataX[i], dataY[i]));
 			series.setData(dataList);
-			getData().add(series);
 			series.setName(name);
+			
+			//add series to chart
+			getData().add(series);
 			series.getNode().setStyle(cssLine.toString());
 
 			//set properties AFTER series has been added to chart

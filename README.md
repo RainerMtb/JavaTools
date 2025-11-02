@@ -1,6 +1,6 @@
 # Utilities written in Java and JavaFX
 
-Small projects only using Standard Java and JavaFX. All code is contained in one single source file.
+Small projects only using Standard Java and JavaFX. All code is contained in one single source file per project.
 
 ## RawViewer
 
