@@ -459,6 +459,7 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 	public enum DataSymbol {
 		DIAMOND	("-fx-background-radius: 0; -fx-background-insets: 0, 2.5; "
 				+ "-fx-padding: 6px 5px 6px 5px; -fx-shape: \"M 5,0 L 10,9 L 5,18 L 0,9 Z\"; ", true),
+		
 		CIRCLE ("-fx-background-insets: 0, 2; -fx-background-radius: 5px; -fx-padding: 5px; ", true),
 		
 		SQUARE ("-fx-background-radius: 0; -fx-padding: 4.5px; ", true),
@@ -467,8 +468,10 @@ public class InteractiveLineChart extends LineChart <Number, Number> {
 		
 		CROSS ("-fx-background-radius: 0; -fx-background-insets: 0; "
 				+ "-fx-shape: \"M2,0 L5,4 L8,0 L10,0 L10,2 L6,5 L10,8 L10,10 L8,10 L5,6 L2, 10 L0,10 L0,8 L4,5 L0,2 L0,0 Z\"; ", false),
+		
 		PLUS ("-fx-background-radius: 0; -fx-background-insets: 0; "
 				+ "-fx-shape: \"M0,0 h 4 v -4 h 2 v 4 h 4 v 2 h -4 v 4 h -2 v -4 h -4 v -2 Z\"; ", false),
+		
 		NONE ("-fx-padding: 0px; ", false),
 		;
 

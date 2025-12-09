@@ -277,6 +277,7 @@ public class RawViewer extends Application {
 			if (selectedFile != null) {
 				inputFile = selectedFile;
 				try {
+					if (input != null) input.close();
 					input = new RandomAccessFile(inputFile, "r");
 					inputDirectory = inputFile.getParentFile().getAbsolutePath();
 					stage.setTitle("RawViewer - " + selectedFile);
@@ -299,6 +300,7 @@ public class RawViewer extends Application {
 			if (files.isEmpty() == false) {
 				inputFile = files.get(0);
 				try {
+					if (input != null) input.close();
 					input = new RandomAccessFile(inputFile, "r");
 					inputDirectory = inputFile.getParentFile().getAbsolutePath();
 					stage.setTitle("RawViewer - " + inputFile);
