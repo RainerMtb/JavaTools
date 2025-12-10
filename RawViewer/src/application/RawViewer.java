@@ -275,9 +275,9 @@ public class RawViewer extends Application {
 			fileChooser.getExtensionFilters().add(new ExtensionFilter("All Files", "*.*"));
 			File selectedFile = fileChooser.showOpenDialog(stage.getOwner());
 			if (selectedFile != null) {
+				try { input.close(); } catch (IOException e) {}
 				inputFile = selectedFile;
 				try {
-					if (input != null) input.close();
 					input = new RandomAccessFile(inputFile, "r");
 					inputDirectory = inputFile.getParentFile().getAbsolutePath();
 					stage.setTitle("RawViewer - " + selectedFile);
@@ -298,9 +298,9 @@ public class RawViewer extends Application {
 			Dragboard db = dragEvent.getDragboard();
 			List<File> files = db.getFiles();
 			if (files.isEmpty() == false) {
+				try { input.close(); } catch (IOException e) {}
 				inputFile = files.get(0);
 				try {
-					if (input != null) input.close();
 					input = new RandomAccessFile(inputFile, "r");
 					inputDirectory = inputFile.getParentFile().getAbsolutePath();
 					stage.setTitle("RawViewer - " + inputFile);
